@@ -30,22 +30,26 @@ import android.provider.Settings.SettingNotFoundException;
  */
 public class BatteryOptimizations extends CordovaPlugin {
 
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
     
     if (action.equals("check")) {
         Context context = cordova.getActivity().getApplicationContext();
-        callbackContext.success(""+context.getSystemService(Context.POWER_SERVICE).isIgnoringBatteryOptimizations(context.getPackageName()));
-        return true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            callbackContext.success(""+((PowerManager)context.getSystemService(Context.POWER_SERVICE)).isIgnoringBatteryOptimizations(context.getPackageName()));
+            return true;
+        }
+        return false;
      }
 
     if (action.equals("run")) {
-    	final Context context = cordova.getActivity();
-	    Intent intent = new Intent();
+        final Context context = cordova.getActivity();
+        Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         String packageName = context.getPackageName();
         PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
 
         try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){return  false;}
             if (!pm.isIgnoringBatteryOptimizations(packageName)) {
                 intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                 intent.setData(Uri.parse("package:" + packageName));
